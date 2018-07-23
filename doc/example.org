@@ -1,0 +1,17 @@
+#+title: Examples
+
+* Programming exercises
+A group is active if it contains a =NEXT= task.
+** NEXT PostgreSQL [0%]
+*** NEXT The awesome PostgreSQL exercise site
+*** TODO Another PostgreSQL exercise site
+** TODO Data science in Python
+* Writing
+A group is active if it contains a habit.
+** HABIT Write a journal
+:PROPERTIES:
+:STYLE:    habit
+:END:
+* Fitness
+A group is inactive if it contains neither a =NEXT= task nor a habit.
+** TODO Go to gym

@@ -1,9 +1,9 @@
-;;; org-focus.el --- Agile within a single org file -*- lexical-binding: t -*-
+;;; org-planner.el --- Utilities for planning with org-mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Akira Komamura
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
-;; Version: 1.0-pre
+;; Version: 0.1
 ;; Package-Requires: ((emacs "25.1") (dash "2.10"))
 ;; URL: https://github.com/akirak/org-focus
 
@@ -38,97 +38,97 @@
 (declare-function 'ivy-read "ivy")
 (declare-function 'ivy-add-actions "ivy")
 
-(defgroup org-focus nil
+(defgroup org-planner nil
   "A collection of helpers for planning important tasks using
 org-mode."
-  :prefix "org-focus"
+  :prefix "org-planner"
   :group 'calendar)
 
 ;;;; Variables
 
-(defvar org-focus-buffer nil)
+(defvar org-planner-buffer nil)
 
 ;;;; Custom variables
 
-(defcustom org-focus-file nil
+(defcustom org-planner-file nil
   "File name of your project tracker."
   :type 'string
-  :group 'org-focus)
+  :group 'org-planner)
 
-(defcustom org-focus-completion-engine
+(defcustom org-planner-completion-engine
   (cond
    ((bound-and-true-p ivy-mode) 'ivy)
    (t nil))
   "Completion engine used in org-focus."
   :type '(coice (const :tag "Ivy" ivy)
                 (const :tag "Completing-read" nil))
-  :group 'org-focus)
+  :group 'org-planner)
 
-(defcustom org-focus-show-entry t
+(defcustom org-planner-show-entry t
   "If non-nil, show visited entries."
   :type 'boolean
-  :group 'org-focus)
+  :group 'org-planner)
 
-(defcustom org-focus-current-todo-regexp "NEXT"
+(defcustom org-planner-current-todo-regexp "NEXT"
   "Regular expression for currently active todos."
   :type 'string
-  :group 'org-focus)
+  :group 'org-planner)
 
-(defcustom org-focus-show-active-groups-first t
-  "If non-nil, show active groups first in `org-focus-show-group'."
+(defcustom org-planner-show-active-groups-first t
+  "If non-nil, show active groups first in `org-planner-show-group'."
   :type 'boolean
-  :group 'org-focus)
+  :group 'org-planner)
 
 ;;;; Completion interfaces
 
 ;;;###autoload
-(defun org-focus-show-group ()
+(defun org-planner-show-group ()
   "Select a group and show it."
   (interactive)
-  (org-focus--select "org-focus group: "
-    (org-focus--with-the-buffer-widen
-     (--> (org-focus--query-groups)
-          (if org-focus-show-active-groups-first
-              (apply #'append
-                     (mapcar #'cdr
-                             (-group-by #'org-focus--group-active-p it)))
-            it)
-          (org-focus--candidates-from-elements it
-            #'org-focus--format-group-heading-from-element)))
-    #'org-focus--goto
-    :ivy-caller 'org-focus-show-group))
+  (org-planner--select "org-planner group: "
+                       (org-planner--with-the-buffer-widen
+                        (--> (org-planner--query-groups)
+                             (if org-planner-show-active-groups-first
+                                 (apply #'append
+                                        (mapcar #'cdr
+                                                (-group-by #'org-planner--group-active-p it)))
+                               it)
+                             (org-planner--candidates-from-elements it
+                                                                    #'org-planner--format-group-heading-from-element)))
+                       #'org-planner--goto
+                       :ivy-caller 'org-planner-show-group))
 
 ;;;###autoload
-(defun org-focus-show-current-focus ()
+(defun org-planner-show-current-focus ()
   "Select a current focus and show it."
   (interactive)
-  (org-focus--select "org-focus current focus: "
-    (org-focus--with-the-buffer-widen
-     (--> (org-focus--query-focuses :current t)
-          (org-focus--candidates-from-elements it)))
-    #'org-focus--goto
-    :ivy-caller 'org-focus-show-current-focus))
+  (org-planner--select "org-planner current focus: "
+    (org-planner--with-the-buffer-widen
+     (--> (org-planner--query-focuses :current t)
+          (org-planner--candidates-from-elements it)))
+    #'org-planner--goto
+    :ivy-caller 'org-planner-show-current-focus))
 
 ;;;; Query functions
 
-(cl-defun org-focus--query-groups ()
+(cl-defun org-planner--query-groups ()
   "Return a list of group elements, i.e. headings at level 1."
   (let (result)
     (goto-char (point-min))
-    (while (re-search-forward (org-focus--heading-regexp 1) nil t)
+    (while (re-search-forward (org-planner--heading-regexp 1) nil t)
       (let* ((group-end (save-excursion (org-end-of-subtree nil)))
              (element (org-element-headline-parser group-end)))
         (push element result)))
     (nreverse result)))
 
-(cl-defun org-focus--query-focuses (&key current)
+(cl-defun org-planner--query-focuses (&key current)
   "Return a list of focus elements, i.e. headings at level 2.
 
 If CURRENT is non-nil, return only a list of current todos."
   (let (result
-        (regexp (concat (org-focus--heading-regexp 2)
+        (regexp (concat (org-planner--heading-regexp 2)
                         (when current
-                          (concat org-focus-current-todo-regexp " ")))))
+                          (concat org-planner-current-todo-regexp " ")))))
     (goto-char (point-min))
     (while (re-search-forward regexp nil t)
       (let* ((group-end (save-excursion (org-end-of-subtree nil)))
@@ -138,48 +138,48 @@ If CURRENT is non-nil, return only a list of current todos."
 
 ;;;; Predicates
 
-(defun org-focus--group-active-p (element)
+(defun org-planner--group-active-p (element)
   "Return t if ELEMENT contains a current todo."
   (not (null (save-excursion
                (goto-char (org-element-property :begin element))
-               (re-search-forward (concat (org-focus--heading-regexp 2)
-                                          org-focus-current-todo-regexp
+               (re-search-forward (concat (org-planner--heading-regexp 2)
+                                          org-planner-current-todo-regexp
                                           " ")
                                   (org-element-property :end element)
                                   'noerror)))))
 
 ;;;; Actions on a heading
 
-(defun org-focus--goto (point)
-  "Go to POINT in `org-focus-buffer'."
-  (switch-to-buffer org-focus-buffer)
+(defun org-planner--goto (point)
+  "Go to POINT in `org-planner-buffer'."
+  (switch-to-buffer org-planner-buffer)
   (goto-char point)
-  (when org-focus-show-entry
+  (when org-planner-show-entry
     (org-show-entry)))
 
 ;;;; Utilities
 
-(defun org-focus--buffer ()
+(defun org-planner--buffer ()
   "Get the buffer of the planner."
-  (or org-focus-buffer
-      (setq org-focus-buffer
-            (or (find-buffer-visiting org-focus-file)
-                (find-file-noselect org-focus-file)))))
+  (or org-planner-buffer
+      (setq org-planner-buffer
+            (or (find-buffer-visiting org-planner-file)
+                (find-file-noselect org-planner-file)))))
 
-(defmacro org-focus--with-the-buffer (&rest progn)
-  "Evalute PROGN in `org-focus-buffer'."
-  `(with-current-buffer (org-focus--buffer)
+(defmacro org-planner--with-the-buffer (&rest progn)
+  "Evalute PROGN in `org-planner-buffer'."
+  `(with-current-buffer (org-planner--buffer)
      ,@progn))
 
-(defmacro org-focus--with-the-buffer-widen (&rest progn)
-  "Evaluate PROGN in `org-focus-buffer' with the buffer widen."
-  `(org-focus--with-the-buffer
+(defmacro org-planner--with-the-buffer-widen (&rest progn)
+  "Evaluate PROGN in `org-planner-buffer' with the buffer widen."
+  `(org-planner--with-the-buffer
     (org-with-wide-buffer ,@progn)))
 
-(cl-defun org-focus--select (prompt alist action-fn &key ivy-caller)
+(cl-defun org-planner--select (prompt alist action-fn &key ivy-caller)
   "Select an item interactively and apply a function to it."
   (declare (indent 1))
-  (cl-case org-focus-completion-engine
+  (cl-case org-planner-completion-engine
     (ivy (ivy-read prompt alist
                    :require-match t
                    :caller ivy-caller
@@ -192,12 +192,12 @@ If CURRENT is non-nil, return only a list of current todos."
                                  alist)))
          (funcall action-fn choice)))))
 
-(cl-defsubst org-focus--candidates-from-elements (elements &optional
+(cl-defsubst org-planner--candidates-from-elements (elements &optional
                                                            format-fn)
-  "Build an alist from org elements in `org-focus-buffer'.
+  "Build an alist from org elements in `org-planner-buffer'.
 
 This function returns an alist which is suitable for use in
-`org-focus--select'.
+`org-planner--select'.
 
 ELEMENTS is a list of elements which is returned
 by `org-element-headline-parser'.
@@ -209,12 +209,12 @@ are generated instead."
   (declare (indent 1))
   (mapcar (lambda (element)
             (cons (funcall (or format-fn
-                               #'org-focus--element-outline-path)
+                               #'org-planner--element-outline-path)
                            element)
                   (org-element-property :begin element)))
           elements))
 
-(defun org-focus--element-outline-path (element)
+(defun org-planner--element-outline-path (element)
   "Format an outline path to a headline ELEMENT."
   (save-excursion
     (goto-char (org-element-property :begin element))
@@ -223,16 +223,16 @@ are generated instead."
             (when-let ((tags (org-get-tags)))
               (concat " :" (mapconcat #'substring-no-properties tags ":") ":")))))
 
-(defun org-focus--format-group-heading-from-element (element)
+(defun org-planner--format-group-heading-from-element (element)
   "Format an outline path to ELEMENT with the active status."
-  (concat (if (org-focus--group-active-p element)
+  (concat (if (org-planner--group-active-p element)
               "* "
             "- ")
-          (org-focus--element-outline-path element)))
+          (org-planner--element-outline-path element)))
 
-(defun org-focus--heading-regexp (level)
+(defun org-planner--heading-regexp (level)
   "Build a regular expression for a heading at LEVEL."
   (concat "^" (regexp-quote (make-string (org-get-valid-level level) ?*)) " "))
 
-(provide 'org-focus)
-;;; org-focus.el ends here
+(provide 'org-planner)
+;;; org-planner.el ends here

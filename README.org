@@ -1,5 +1,5 @@
-* org-focus
-=org-focus= is an attempt to implement an agile framework using Emacs Org Mode. It assumes all of your important tasks are tracked in a single Org file which conforms the following conventions:
+* org-planner
+=org-planner= is an attempt to implement an agile framework using Emacs Org Mode. It assumes all of your important tasks are tracked in a single Org file which conforms the following conventions:
 
 - Level-1 headings are groups, or swim lanes, which should usually contain at most one current focus.
 - Level-2 headings are focuses, or milestones, which are used to organize tasks in an comprehensible way.
@@ -8,11 +8,11 @@
 I will develop a plethora of utilities around this policy. I am not sure if it will be effective. Hopefully it will.
 
 ** Configuration
-- Set =org-focus-file= to a file following the conventions described above.
-- Set =org-focus-current-todo-regexp= to a regular expression for todo states of active tasks (default: =NEXT=).
+- Set =org-planner-file= to a file following the conventions described above.
+- Set =org-planner-current-todo-regexp= to a regular expression for todo states of active tasks (default: =NEXT=).
 
 ** Are agile methodologies really useful?
-I am not sure. I don't think one does necessarily have to stick with SCRUM to handle tasks, because things are not always kept in such an order. Note that you don't always have to use this framework if it is available. You can use normal org-agenda while you are using org-focus. Org-focus is meant to be just one way to bring order to tasks.
+I am not sure. I don't think one does necessarily have to stick with SCRUM to handle tasks, because things are not always kept in such an order. Note that you don't always have to use this framework if it is available. You can use normal org-agenda while you are using org-planner. Org-focus is meant to be just one way to bring order to tasks.
 
 ** Some ideas
 The following objectives are rather ambitious for my current skills, and I may not be able to implement all of them even in the future:
@@ -22,3 +22,6 @@ The following objectives are rather ambitious for my current skills, and I may n
 - [ ] Add a Haskell server for heavy lifting in planning tasks: As Emacs Lisp is neither fast nor reliable for serious analytic needs, I may need to write a back end in another language that can understand Org files. It will probably be Haskell (Servant?).
 - [ ] Add an Elm interface for providing a rich dashboard: Emacs is not a decent framework for building a graphical interface with visualization.
 - [ ] Add support for org-edna for handling complex dependencies
+
+** About the name
+This package was originally named =org-focus=, but I found [[https://github.com/chrisdone/org-focus][a package of the same name]] by famous Chris Done, so I renamed my package to =org-planner=.
